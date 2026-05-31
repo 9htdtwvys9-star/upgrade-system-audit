@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPGRADE SYSTEM OS // Discipline Leak Audit</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060810;
+  --bg2: #08091a;
+  --panel: #0b0d1f;
+  --panel2: #0d1028;
+  --blue: #1e90ff;
+  --blue-l: #4db8ff;
+  --blue-d: #091433;
+  --blue-glow: rgba(30,144,255,0.18);
+  --border: #1a3a6e;
+  --dim: #1e2a48;
+  --grey: #b0bcd0;
+  --dimtxt: #3a4868;
+  --warn: #f0a030;
+  --red: #ff4466;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--grey);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BACKGROUND */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 90%, rgba(10,60,200,0.18) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(10,20,60,0.8) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(26,58,110,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,58,110,0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none; z-index: 0;
+}
+
+/* Diagonal beam */
+.beam {
+  position: fixed; top: 0; right: 0;
+  width: 3px; height: 60%;
+  background: linear-gradient(180deg, rgba(30,144,255,0.7) 0%, transparent 100%);
+  transform: rotate(25deg) translateX(60px);
+  transform-origin: top right;
+  filter: blur(2px);
+  pointer-events: none; z-index: 0;
+}
+.beam2 {
+  position: fixed; top: 0; right: 20px;
+  width: 1px; height: 45%;
+  background: linear-gradient(180deg, rgba(30,144,255,0.3) 0%, transparent 100%);
+  transform: rotate(25deg);
+  transform-origin: top right;
+  pointer-events: none; z-index: 0;
+}
+
+.wrapper {
+  position: relative; z-index: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ── HEADER ── */
+.header-bar {
+  height: 3px;
+  background: var(--blue);
+  box-shadow: 0 0 20px rgba(30,144,255,0.6), 0 0 60px rgba(30,144,255,0.2);
+  margin-bottom: 0;
+}
+
+.header {
+  background: linear-gradient(180deg, rgba(9,20,51,0.95) 0%, transparent 100%);
+  padding: 16px 0 20px;
+  margin-bottom: 6px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Logo SVG */
+.logo-shield {
+  width: 36px; height: 42px; flex-shrink: 0;
+}
+
+.brand-meta { flex: 1; }
+
+.brand-edition {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--blue-l);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+.brand-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--blue) 0%, transparent 100%);
+  margin-top: 4px;
+  opacity: 0.4;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.title-main {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 9vw, 64px);
+  color: var(--white);
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(30,144,255,0.15);
+}
+
+.title-os {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 9vw, 64px);
+  color: var(--blue);
+  letter-spacing: 3px;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(30,144,255,0.5);
+}
+
+.title-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--dimtxt);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.header-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+  margin-top: 12px;
+}
+
+/* ── NOTICE ── */
+.notice {
+  background: rgba(6,20,64,0.8);
+  border: 1px solid var(--border);
+  border-left: 2.5px solid var(--blue);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #8090b0;
+}
+.notice strong { color: var(--blue-l); font-weight: 700; }
+
+/* ── PHASE BLOCKS ── */
+.phase {
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.phase-hdr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 10px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.phase-hdr::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 12px rgba(30,144,255,0.5);
+}
+
+.phase-hdr::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 8px;
+  background: linear-gradient(180deg, rgba(30,144,255,0.1) 0%, transparent 100%);
+}
+
+.phase-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  color: rgba(30,144,255,0.4);
+  line-height: 1;
+}
+
+.phase-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue-l);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.phase-body {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 0;
+}
+
+/* ── FIELD ROWS ── */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(26,58,110,0.4);
+}
+.field-row:last-child { border-bottom: none; }
+
+.field-lbl strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+}
+.field-lbl span {
+  font-size: 10px;
+  color: var(--dimtxt);
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.input-wrap, .calc-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.unit { font-size: 10px; color: var(--dimtxt); white-space: nowrap; font-family: 'Share Tech Mono', monospace; }
+
+input[type="number"] {
+  background: var(--blue-d);
+  border: 1px solid var(--blue);
+  box-shadow: 0 0 0 1px rgba(30,144,255,0.15), 0 0 12px rgba(30,144,255,0.1);
+  color: var(--blue-l);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 7px 12px;
+  width: 100px;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type="number"]:focus {
+  border-color: var(--blue-l);
+  box-shadow: 0 0 0 1px var(--blue-l), 0 0 20px rgba(30,144,255,0.25);
+}
+input[type="number"]::placeholder { color: var(--dim); font-size: 12px; }
+
+.calc-val {
+  background: rgba(9,20,51,0.8);
+  border: 1px solid;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 7px 14px;
+  min-width: 140px;
+  text-align: right;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+.calc-val.blue  { border-color: rgba(30,144,255,0.4); color: var(--blue-l); }
+.calc-val.warn  { border-color: rgba(240,160,48,0.4); color: var(--warn); }
+.calc-val.red   { border-color: rgba(255,68,102,0.4); color: var(--red); }
+.calc-val.empty { border-color: var(--dim); color: var(--dimtxt); }
+
+/* ── FRICTION VECTORS ── */
+.vector-list, .hotfix-list { display: flex; flex-direction: column; }
+
+.vector-item, .hotfix-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  cursor: pointer;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(26,58,110,0.3);
+  transition: background 0.2s;
+}
+.vector-item:last-child, .hotfix-item:last-child { border-bottom: none; }
+.vector-item:hover, .hotfix-item:hover { background: rgba(30,144,255,0.04); }
+
+.vector-item input[type="checkbox"],
+.hotfix-item input[type="radio"] { display: none; }
+
+.check-box {
+  width: 16px; height: 16px;
+  border: 1px solid var(--border);
+  background: var(--blue-d);
+  flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+
+.radio-box {
+  width: 16px; height: 16px;
+  border: 1px solid var(--border);
+  background: var(--blue-d);
+  border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+
+.vector-item input:checked ~ .check-box {
+  border-color: var(--blue);
+  background: rgba(30,144,255,0.15);
+}
+.vector-item input:checked ~ .check-box::after {
+  content: '✓'; font-size: 10px; color: var(--blue-l); font-weight: 900;
+}
+.hotfix-item input:checked ~ .radio-box {
+  border-color: var(--blue);
+  background: rgba(30,144,255,0.15);
+}
+.hotfix-item input:checked ~ .radio-box::after {
+  content: ''; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--blue-l);
+}
+
+.item-text strong {
+  display: block; font-size: 12px; font-weight: 700;
+  color: var(--white); margin-bottom: 2px;
+}
+.item-text span { font-size: 10px; color: var(--dimtxt); font-family: 'Share Tech Mono', monospace; line-height: 1.5; }
+
+.phase-intro {
+  padding: 10px 18px 4px;
+  font-size: 10px;
+  color: var(--dimtxt);
+  font-family: 'Share Tech Mono', monospace;
+  border-bottom: 1px solid rgba(26,58,110,0.3);
+}
+
+/* ── VERDICT ── */
+.verdict {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 0 1px rgba(30,144,255,0.1), 0 0 40px rgba(30,144,255,0.06);
+  padding: 28px 24px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 14px;
+}
+.verdict::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 16px rgba(30,144,255,0.6);
+}
+.verdict-lbl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: 5px;
+  color: var(--dimtxt); text-transform: uppercase; margin-bottom: 10px;
+}
+.verdict-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 14vw, 90px);
+  line-height: 1; letter-spacing: 2px;
+  transition: color 0.4s, text-shadow 0.4s;
+}
+.verdict-num.ok    { color: var(--blue-l); text-shadow: 0 0 30px rgba(30,144,255,0.4); }
+.verdict-num.warn  { color: var(--warn);   text-shadow: 0 0 30px rgba(240,160,48,0.4); }
+.verdict-num.danger{ color: var(--red);    text-shadow: 0 0 40px rgba(255,68,102,0.5); }
+.verdict-msg {
+  font-size: 11px; color: var(--dimtxt); margin-top: 10px;
+  line-height: 1.8; max-width: 540px; margin-left: auto; margin-right: auto;
+  min-height: 40px; transition: color 0.3s;
+}
+.verdict-msg.active { color: var(--grey); }
+
+/* ── UPSELL ── */
+.upsell {
+  background: rgba(6,20,64,0.9);
+  border: 1px solid var(--blue);
+  box-shadow: 0 0 30px rgba(30,144,255,0.12);
+  padding: 20px 24px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 24px;
+}
+.upsell::before, .upsell::after {
+  content: '';
+  position: absolute; left: 0; right: 0; height: 1.5px;
+  background: var(--blue);
+}
+.upsell::before { top: 0; }
+.upsell::after  { bottom: 0; }
+
+.upsell-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 3px;
+  color: var(--white); margin-bottom: 6px;
+}
+
+.upsell-features {
+  display: flex; justify-content: center; gap: 24px;
+  flex-wrap: wrap; margin-bottom: 14px;
+}
+.upsell-feat {
+  font-size: 10px; color: var(--blue-l);
+  font-family: 'Share Tech Mono', monospace;
+  display: flex; align-items: center; gap: 4px;
+}
+.upsell-feat::before { content: '◆'; font-size: 6px; }
+
+.upsell-cta {
+  display: inline-block;
+  background: var(--blue);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 3px;
+  padding: 10px 36px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none; cursor: pointer;
+  box-shadow: 0 0 20px rgba(30,144,255,0.4);
+  transition: all 0.2s;
+}
+.upsell-cta:hover {
+  background: var(--blue-l);
+  box-shadow: 0 0 30px rgba(77,184,255,0.5);
+}
+.upsell-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 2px; margin-left: 8px;
+  color: #fff;
+}
+
+/* ── ACTIONS ── */
+.actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 12px 24px; border: none; cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost {
+  background: transparent; color: var(--grey);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue-l); }
+
+@media print {
+  body { background: #060810 !important; }
+  .actions, .upsell { display: none; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.phase-hdr::before { animation: pulse-glow 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="beam"></div>
+<div class="beam2"></div>
+
+<div class="header-bar"></div>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="brand-row">
+      <!-- Upgrade System Logo -->
+      <svg class="logo-shield" viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 2L4 10V28C4 38 12 46 22 50C32 46 40 38 40 28V10L22 2Z" fill="#1e90ff"/>
+        <path d="M22 2L4 10V28C4 38 12 46 22 50C32 46 40 38 40 28V10L22 2Z" fill="url(#shield-grad)"/>
+        <path d="M10 22L18 14L26 22L18 30Z" fill="white" opacity="0.9"/>
+        <path d="M18 22L26 14L34 22L26 30Z" fill="#80c0ff" opacity="0.7"/>
+        <defs>
+          <linearGradient id="shield-grad" x1="22" y1="2" x2="22" y2="50" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2aa0ff"/>
+            <stop offset="100%" stop-color="#0040aa"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="brand-meta">
+        <div class="brand-edition">PREMIUM OPERATIONAL ARCHITECTURE</div>
+        <div class="brand-line"></div>
+      </div>
+    </div>
+
+    <div class="title-row">
+      <div class="title-main">UPGRADE SYSTEM</div>
+      <div class="title-os">OS</div>
+    </div>
+    <div class="title-sub">Core Diagnostic // Discipline Leak Audit Protocol</div>
+    <div class="header-divider"></div>
+  </div>
+
+  <div class="notice">
+    <strong>OPERATOR NOTICE:</strong> Most individuals do not suffer from a lack of innate motivation. They suffer from an environmental and systemic design defect. This diagnostic protocol is engineered to precisely audit, isolate, and quantify the exact cognitive and financial leakage caused by unmonitored friction loops in your execution workflow.
+  </div>
+
+  <!-- PHASE 01 -->
+  <div class="phase">
+    <div class="phase-hdr">
+      <div class="phase-num">01</div>
+      <div class="phase-title">Cognitive Time Leak Audit</div>
+    </div>
+    <div class="phase-body">
+      <div class="field-row">
+        <div class="field-lbl">
+          <strong>Hours leaked to cheap dopamine metrics per day</strong>
+          <span>Non-purposeful digital consumption, infinite scrolling, background distractions</span>
+        </div>
+        <div class="input-wrap">
+          <input type="number" id="hoursPerDay" min="0" max="24" step="0.5" placeholder="0.0" oninput="calculate()">
+          <span class="unit">hrs / day</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-lbl">
+          <strong>Compounded monthly resource drain</strong>
+          <span>Daily Hours × 30 Days</span>
+        </div>
+        <div class="calc-wrap">
+          <div class="calc-val blue empty" id="hoursPerMonth">—</div>
+          <span class="unit">hrs / mo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 02 -->
+  <div class="phase">
+    <div class="phase-hdr">
+      <div class="phase-num">02</div>
+      <div class="phase-title">Financial Capital Loss Calculator</div>
+    </div>
+    <div class="phase-body">
+      <div class="field-row">
+        <div class="field-lbl">
+          <strong>Your target baseline hourly value</strong>
+          <span>e.g., $30/hour — your estimated time value metric</span>
+        </div>
+        <div class="input-wrap">
+          <input type="number" id="hourlyRate" min="0" step="1" placeholder="30" oninput="calculate()">
+          <span class="unit">/ hr</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-lbl">
+          <strong>Total monthly cost of inaction</strong>
+          <span>Hours Leaked × Hourly Value</span>
+        </div>
+        <div class="calc-wrap">
+          <div class="calc-val warn empty" id="monthlyCost">—</div>
+          <span class="unit">/ mo</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-lbl">
+          <strong>Compounded annual capital leakage</strong>
+          <span>Monthly Loss × 12 Months</span>
+        </div>
+        <div class="calc-wrap">
+          <div class="calc-val red empty" id="annualCost">—</div>
+          <span class="unit">/ yr</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 03 -->
+  <div class="phase">
+    <div class="phase-hdr">
+      <div class="phase-num">03</div>
+      <div class="phase-title">System Friction Vector Analysis</div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-intro">Isolate the structural environment vectors causing execution drop-offs. Audit and check all that apply:</div>
+      <div class="vector-list">
+        <label class="vector-item">
+          <input type="checkbox" onchange="countFriction()">
+          <div class="check-box"></div>
+          <div class="item-text">
+            <strong>Spatially Unsecured Workspace</strong>
+            <span>Smartphone or high-stimulus items kept within your physical peripheral field.</span>
+          </div>
+        </label>
+        <label class="vector-item">
+          <input type="checkbox" onchange="countFriction()">
+          <div class="check-box"></div>
+          <div class="item-text">
+            <strong>Attention Residue Tax</strong>
+            <span>Operating with multiple browser tabs and communication interfaces open during execution blocks.</span>
+          </div>
+        </label>
+        <label class="vector-item">
+          <input type="checkbox" onchange="countFriction()">
+          <div class="check-box"></div>
+          <div class="item-text">
+            <strong>Ambiguity Deficit</strong>
+            <span>Commencing the workday without an absolute, itemized input metric established the night before.</span>
+          </div>
+        </label>
+        <label class="vector-item">
+          <input type="checkbox" onchange="countFriction()">
+          <div class="check-box"></div>
+          <div class="item-text">
+            <strong>Lagging Indicator Dependency</strong>
+            <span>Destabilizing focus loops by constantly analyzing views, metrics, or real-time sales counts.</span>
+          </div>
+        </label>
+      </div>
+      <div id="frictionBar" style="display:none; padding:10px 18px; font-size:10px; font-family:'Share Tech Mono',monospace; color:#ff4466; border-top:1px solid rgba(255,68,102,0.2); background:rgba(255,68,102,0.05);">
+        ⚠ &nbsp;<span id="frictionNum">0</span> ACTIVE FRICTION VECTORS DETECTED
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 04 -->
+  <div class="phase">
+    <div class="phase-hdr">
+      <div class="phase-num">04</div>
+      <div class="phase-title">Immediate Hotfix Protocol — 24-Hour Deployment</div>
+    </div>
+    <div class="phase-body">
+      <div class="phase-intro">Select and execute exactly ONE immediate architectural patch to permanently shatter the friction loop:</div>
+      <div class="hotfix-list">
+        <label class="hotfix-item">
+          <input type="radio" name="hotfix">
+          <div class="radio-box"></div>
+          <div class="item-text">
+            <strong>Sovereign Domain Block</strong>
+            <span>Lock the smartphone completely outside your designated deep-work space.</span>
+          </div>
+        </label>
+        <label class="hotfix-item">
+          <input type="radio" name="hotfix">
+          <div class="radio-box"></div>
+          <div class="item-text">
+            <strong>Single-Task Domination</strong>
+            <span>Erase interface friction. Terminate all open tabs except the single engine of active work.</span>
+          </div>
+        </label>
+        <label class="hotfix-item">
+          <input type="radio" name="hotfix">
+          <div class="radio-box"></div>
+          <div class="item-text">
+            <strong>The 10-Minute Activation Patch</strong>
+            <span>Bypass initial metabolic inertia by committing to execute inputs for precisely 600 seconds.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="verdict">
+    <div class="verdict-lbl">Diagnostic Consensus // Annual Capital Leakage</div>
+    <div class="verdict-num ok" id="verdictNum">$0</div>
+    <div class="verdict-msg" id="verdictMsg">Enter your daily hours and hourly rate above to generate your audit result.</div>
+  </div>
+
+  <!-- UPSELL -->
+  <div class="upsell">
+    <div class="upsell-title">UPGRADE TO THE FULL OPERATING SYSTEM CORE</div>
+    <div class="upsell-features">
+      <div class="upsell-feat">30-Day Execution Protocol</div>
+      <div class="upsell-feat">Deep Work Engines</div>
+      <div class="upsell-feat">Input Tracking Matrices</div>
+      <div class="upsell-feat">Failure Recovery Protocol</div>
+    </div>
+    <button class="upsell-cta">Execute System Upgrade <span class="upsell-price">$19</span></button>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-ghost" onclick="window.print()">↓ Print / Save as PDF</button>
+    <button class="btn btn-ghost" onclick="resetAll()">↺ Reset Audit</button>
+  </div>
+
+</div>
+
+<script>
+function fmt(n) {
+  if (isNaN(n) || n === null) return '—';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+function fmtH(n) {
+  if (isNaN(n) || n === null) return '—';
+  return n.toFixed(1) + ' hrs';
+}
+
+function calculate() {
+  const h = parseFloat(document.getElementById('hoursPerDay').value) || 0;
+  const r = parseFloat(document.getElementById('hourlyRate').value)  || 0;
+  const hpm = h * 30;
+  const mc  = hpm * r;
+  const ac  = mc * 12;
+
+  const elHPM = document.getElementById('hoursPerMonth');
+  const elMC  = document.getElementById('monthlyCost');
+  const elAC  = document.getElementById('annualCost');
+  const elVN  = document.getElementById('verdictNum');
+  const elVM  = document.getElementById('verdictMsg');
+
+  if (h > 0) {
+    elHPM.textContent = fmtH(hpm);
+    elHPM.classList.remove('empty');
+  } else {
+    elHPM.textContent = '—';
+    elHPM.classList.add('empty');
+  }
+
+  if (h > 0 && r > 0) {
+    elMC.textContent = fmt(mc); elMC.classList.remove('empty');
+    elAC.textContent = fmt(ac); elAC.classList.remove('empty');
+    elVN.textContent = fmt(ac);
+    elVN.className = 'verdict-num';
+    elVM.classList.add('active');
+
+    if (ac >= 10000) {
+      elVN.classList.add('danger');
+      elVM.textContent = 'CRITICAL SYSTEM FAILURE. Your default environment destroys capital at scale. A structural defect cannot be patched with motivation. Deploy rigid architecture — now.';
+    } else if (ac >= 1000) {
+      elVN.classList.add('warn');
+      elVM.textContent = 'STRUCTURAL DEFECT CONFIRMED. Your execution barrier is not internal motivation — it is environmental design. Treating architecture failures with emotional spikes is a fatal loop.';
+    } else {
+      elVN.classList.add('ok');
+      elVM.textContent = 'Leakage within manageable range. Maintain current protocols and monitor friction vectors to prevent escalation.';
+    }
+  } else if (h > 0) {
+    elMC.textContent = '—'; elMC.classList.add('empty');
+    elAC.textContent = '—'; elAC.classList.add('empty');
+    elVN.textContent = '$0'; elVN.className = 'verdict-num ok';
+    elVM.textContent = 'Enter your hourly rate to calculate financial leakage.';
+    elVM.classList.remove('active');
+  } else {
+    elMC.textContent = '—'; elMC.classList.add('empty');
+    elAC.textContent = '—'; elAC.classList.add('empty');
+    elVN.textContent = '$0'; elVN.className = 'verdict-num ok';
+    elVM.textContent = 'Enter your daily hours and hourly rate above to generate your audit result.';
+    elVM.classList.remove('active');
+  }
+}
+
+function countFriction() {
+  const n = document.querySelectorAll('.vector-item input:checked').length;
+  const bar = document.getElementById('frictionBar');
+  document.getElementById('frictionNum').textContent = n;
+  bar.style.display = n > 0 ? 'block' : 'none';
+}
+
+function resetAll() {
+  document.getElementById('hoursPerDay').value = '';
+  document.getElementById('hourlyRate').value = '';
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  countFriction(); calculate();
+}
+</script>
+</body>
+</html>
